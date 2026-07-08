@@ -1,0 +1,143 @@
+// SockTu — SOC 2 compliance tracking
+// Data model: Trust Services Criteria → Controls → Evidence + Tasks + Owners
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// A Trust Services Category (e.g. Security, Availability, Confidentiality,
+// Processing Integrity, Privacy). "Security" (Common Criteria) is required
+// for every SOC 2 report; the others are opt-in based on scope.
+model Category {
+  id        String   @id @default(cuid())
+  code      String   @unique // "CC", "A", "C", "PI", "P"
+  name      String // "Security", "Availability", ...
+  summary   String // plain-english description
+  inScope   Boolean  @default(true) // is this category part of this audit?
+  sortOrder Int      @default(0)
+
+  criteria Criterion[]
+}
+
+// A specific Trust Services Criterion, e.g. CC6.1, A1.2. Controls map to these.
+model Criterion {
+  id         String @id @default(cuid())
+  ref        String @unique // "CC6.1"
+  title      String // "Logical & physical access controls"
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  controls Control[]
+}
+
+// A control — the actual thing an organization does. Written in plain English.
+model Control {
+  id          String @id @default(cuid())
+  key         String @unique // "ACCESS-MFA"
+  name        String // plain-english: "Everyone signs in with MFA"
+  description String // what auditors want to see
+  guidance    String // how to satisfy it, in plain terms
+
+  // status: "satisfied" | "at_risk" | "failing" | "not_started"
+  status String @default("not_started")
+
+  // How much this control matters for audit readiness (1 = normal, 2 = high, 3 = critical).
+  weight Int @default(1)
+
+  // Is this control required to pass the audit (a hard blocker if not satisfied)?
+  gating Boolean @default(false)
+
+  criterionId String
+  criterion   Criterion @relation(fields: [criterionId], references: [id], onDelete: Cascade)
+
+  ownerId String?
+  owner   Owner?  @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  evidence Evidence[]
+  tasks    Task[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Evidence attached to a control. May be a manual upload or (later) an
+// automated pull from an integration.
+model Evidence {
+  id       String @id @default(cuid())
+  title    String
+  // type: "document" | "screenshot" | "config" | "attestation" | "log" | "automated"
+  type     String @default("document")
+  // source: "manual" | "aws" | "github" | "okta" | "gsuite" | ...
+  source   String @default("manual")
+  note     String?
+
+  collectedAt DateTime  @default(now())
+  expiresAt   DateTime? // when this evidence goes stale and must be refreshed
+
+  controlId String
+  control   Control @relation(fields: [controlId], references: [id], onDelete: Cascade)
+}
+
+// A task in the readiness queue — the "one next action" engine feeds off these.
+model Task {
+  id       String @id @default(cuid())
+  title    String
+  detail   String?
+  // status: "todo" | "in_progress" | "done"
+  status   String @default("todo")
+  // priority: "critical" | "high" | "medium" | "low"
+  priority String @default("medium")
+
+  dueDate DateTime?
+
+  controlId String?
+  control   Control? @relation(fields: [controlId], references: [id], onDelete: Cascade)
+
+  ownerId String?
+  owner   Owner?  @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// A person accountable for controls / tasks.
+model Owner {
+  id    String @id @default(cuid())
+  name  String
+  email String @unique
+  role  String // "CTO", "Security Lead", ...
+
+  controls Control[]
+  tasks    Task[]
+}
+
+// A written policy that supports controls (e.g. Access Control Policy).
+model Policy {
+  id       String @id @default(cuid())
+  name     String
+  // status: "approved" | "draft" | "missing" | "needs_review"
+  status   String @default("missing")
+  version  String @default("1.0")
+  owner    String?
+
+  approvedAt DateTime?
+  reviewBy   DateTime? // annual review date
+}
+
+// A third-party vendor whose risk must be tracked for SOC 2.
+model Vendor {
+  id       String @id @default(cuid())
+  name     String
+  service  String // "Cloud hosting", "Payment processing", ...
+  // risk: "low" | "medium" | "high"
+  risk     String @default("low")
+  // status: "reviewed" | "pending" | "flagged"
+  status   String @default("pending")
+  hasSoc2  Boolean @default(false)
+  reviewedAt DateTime?
+}
