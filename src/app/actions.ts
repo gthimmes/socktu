@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 
@@ -51,4 +52,30 @@ export async function addEvidence(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/evidence");
   revalidatePath(`/controls/${controlId}`);
+}
+
+export async function createShareLink(formData: FormData) {
+  const label = String(formData.get("label") ?? "").trim() || "Audit-readiness report";
+  const expiresRaw = String(formData.get("expiresInDays") ?? "").trim();
+  const expiresInDays = expiresRaw ? Number(expiresRaw) : null;
+
+  const token = randomBytes(9).toString("base64url"); // ~12 url-safe chars
+
+  await db.shareLink.create({
+    data: {
+      token,
+      label,
+      expiresAt:
+        expiresInDays && !Number.isNaN(expiresInDays)
+          ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
+          : null,
+    },
+  });
+
+  revalidatePath("/report");
+}
+
+export async function revokeShareLink(id: string) {
+  await db.shareLink.update({ where: { id }, data: { revoked: true } });
+  revalidatePath("/report");
 }

@@ -36,3 +36,23 @@
     @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium;
   }
 }
+
+/* Print: strip app chrome so the report prints as a clean document. */
+@media print {
+  :root {
+    --bg: #ffffff;
+  }
+  body {
+    background: #ffffff;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .card {
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+  @page {
+    margin: 1.5cm;
+  }
+}

@@ -88,6 +88,41 @@ export async function getOwners() {
   return db.owner.findMany({ orderBy: { name: "asc" } });
 }
 
+export async function getReadinessTrend() {
+  return db.readinessSnapshot.findMany({ orderBy: { capturedAt: "asc" } });
+}
+
+// Company identity for the report header. In a multi-tenant build this comes
+// from the org record; single-tenant demo hardcodes it.
+export const COMPANY = {
+  name: "Northwind Inc.",
+  framework: "SOC 2 Type I",
+  scope: "Security, Availability, Confidentiality",
+};
+
+// Assembles everything the audit-readiness report needs, in one shot.
+export async function buildReport() {
+  const [readiness, categories, trend] = await Promise.all([
+    getReadiness(),
+    getControlsGrouped(),
+    getReadinessTrend(),
+  ]);
+  return { company: COMPANY, readiness, categories, trend, generatedAt: new Date() };
+}
+
+export type ReportData = Awaited<ReturnType<typeof buildReport>>;
+
+export async function getShareLink(token: string) {
+  const link = await db.shareLink.findUnique({ where: { token } });
+  if (!link || link.revoked) return null;
+  if (link.expiresAt && link.expiresAt.getTime() < Date.now()) return null;
+  return link;
+}
+
+export async function getShareLinks() {
+  return db.shareLink.findMany({ orderBy: { createdAt: "desc" } });
+}
+
 export async function getPolicies() {
   return db.policy.findMany({ orderBy: { name: "asc" } });
 }

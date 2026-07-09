@@ -129,6 +129,24 @@ model Policy {
   reviewBy   DateTime? // annual review date
 }
 
+// A point-in-time snapshot of overall readiness, so we can show a trend.
+model ReadinessSnapshot {
+  id         String   @id @default(cuid())
+  score      Int // 0-100
+  blockers   Int
+  capturedAt DateTime @default(now())
+}
+
+// A tokenized, read-only share link for the audit-readiness report.
+model ShareLink {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  label     String // "For Prescient Audit LLC", ...
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+  revoked   Boolean   @default(false)
+}
+
 // A third-party vendor whose risk must be tracked for SOC 2.
 model Vendor {
   id       String @id @default(cuid())

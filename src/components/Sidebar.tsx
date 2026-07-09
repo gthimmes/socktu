@@ -8,6 +8,7 @@ const NAV = [
   { href: "/controls", label: "Controls", icon: "▤" },
   { href: "/evidence", label: "Evidence", icon: "▣" },
   { href: "/tasks", label: "Task queue", icon: "✓" },
+  { href: "/report", label: "Audit report", icon: "❏" },
   { href: "/policies", label: "Policies", icon: "§" },
   { href: "/vendors", label: "Vendors", icon: "⬡" },
 ];
@@ -16,7 +17,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed inset-y-0 left-0 flex w-60 flex-col border-r border-slate-200 bg-white">
+    <aside className="fixed inset-y-0 left-0 flex w-60 flex-col border-r border-slate-200 bg-white print:hidden">
       <div className="flex items-center gap-2.5 px-5 py-5">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-lg font-bold text-white">
           S

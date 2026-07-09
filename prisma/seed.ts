@@ -19,6 +19,8 @@ async function main() {
   await db.owner.deleteMany();
   await db.policy.deleteMany();
   await db.vendor.deleteMany();
+  await db.readinessSnapshot.deleteMany();
+  await db.shareLink.deleteMany();
 
   console.log("👥 Seeding owners...");
   const owners = await Promise.all([
@@ -615,6 +617,32 @@ async function main() {
     db.vendor.create({ data: { name: "Notion", service: "Docs & wiki", risk: "medium", status: "pending", hasSoc2: true } }),
     db.vendor.create({ data: { name: "Zoom", service: "Video conferencing", risk: "low", status: "flagged", hasSoc2: true } }),
   ]);
+
+  console.log("📈 Seeding readiness history...");
+  // Weekly snapshots trending up to today's ~63% / 6 blockers.
+  const trend: [number, number][] = [
+    [37, 12],
+    [41, 11],
+    [44, 11],
+    [48, 10],
+    [51, 9],
+    [54, 8],
+    [57, 8],
+    [59, 7],
+    [61, 7],
+    [63, 6],
+  ];
+  await Promise.all(
+    trend.map(([score, blockers], i) =>
+      db.readinessSnapshot.create({
+        data: {
+          score,
+          blockers,
+          capturedAt: daysAgo((trend.length - 1 - i) * 7),
+        },
+      })
+    )
+  );
 
   console.log("🎉 Seed complete.");
 }
