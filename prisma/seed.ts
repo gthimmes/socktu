@@ -596,6 +596,94 @@ async function main() {
     ),
   ]);
 
+  console.log("🛠️  Seeding guided remediation steps...");
+  const steps = (key: string, texts: string[], doneCount = 0) =>
+    Promise.all(
+      texts.map((text, i) =>
+        db.remediationStep.create({
+          data: { controlId: controlByKey[key].id, text, order: i, done: i < doneCount },
+        })
+      )
+    );
+
+  await Promise.all([
+    steps("ENDPOINT-PROT", [
+      "Choose an MDM (e.g. Kandji, Jamf, or Intune)",
+      "Enroll every company laptop in the MDM",
+      "Enforce full-disk encryption (FileVault / BitLocker)",
+      "Enforce auto-lock and a screen-lock timeout",
+      "Deploy endpoint protection / anti-malware",
+      "Export a device compliance report as evidence",
+    ]),
+    steps("OFFBOARDING", [
+      "Draft an offboarding checklist triggered by HR departures",
+      "List every access to revoke (SSO, email, repos, cloud, SaaS)",
+      "Assign same-day revocation ownership",
+      "Run it for the last 2 departures and capture screenshots",
+    ]),
+    steps(
+      "ASSET-INVENTORY",
+      [
+        "List all production systems and cloud accounts",
+        "List all code repositories",
+        "List all data stores and what data they hold",
+        "Assign an owner to each asset",
+        "Save as the inventory and set a quarterly review reminder",
+      ],
+      1
+    ),
+    steps("RISK-ASSESSMENT", [
+      "Schedule a 90-minute risk workshop with leadership",
+      "Brainstorm risks across security, availability, and vendors",
+      "Score each risk by likelihood and impact",
+      "Record a mitigation owner and plan per risk",
+      "Save the risk register as evidence",
+    ]),
+    steps("INCIDENT-PLAN", [
+      "Write the IR plan (roles, severities, comms)",
+      "Define escalation paths and on-call",
+      "Run one tabletop exercise with the team",
+      "Capture the tabletop notes and lessons learned",
+      "Get the incident response policy approved",
+    ]),
+    steps(
+      "BACKUPS",
+      [
+        "Confirm automated backups run for every data store",
+        "Document retention periods per data type",
+        "Perform a test restore in staging",
+        "Screenshot the successful restore",
+        "Schedule test restores twice a year",
+      ],
+      2
+    ),
+  ]);
+
+  console.log("📨 Seeding evidence requests...");
+  const request = (
+    key: string,
+    description: string,
+    ownerId: string,
+    status: string,
+    dueInDays: number | null
+  ) =>
+    db.evidenceRequest.create({
+      data: {
+        controlId: controlByKey[key].id,
+        description,
+        ownerId,
+        status,
+        dueDate: dueInDays === null ? null : daysFromNow(dueInDays),
+      },
+    });
+
+  await Promise.all([
+    request("ENDPOINT-PROT", "MDM device-compliance report showing 100% of laptops encrypted", marcus.id, "requested", 10),
+    request("OFFBOARDING", "Completed offboarding checklist for the most recent departure", priya.id, "requested", 5),
+    request("RISK-ASSESSMENT", "Signed risk register from the annual workshop", ava.id, "requested", 14),
+    request("BACKUPS", "Screenshot of a successful test restore", devon.id, "submitted", 8),
+  ]);
+
   console.log("📄 Seeding policies...");
   await Promise.all([
     db.policy.create({ data: { name: "Information Security Policy", status: "approved", version: "2.1", owner: "Marcus Reed", approvedAt: daysAgo(60), reviewBy: daysFromNow(305) } }),

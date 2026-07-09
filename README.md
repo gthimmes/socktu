@@ -22,6 +22,10 @@ move. Plain-English controls. Evidence capture in seconds. Nothing to decode.
 - **Evidence vault** — every artifact an auditor will review, with automatic
   freshness tracking so nothing silently goes stale.
 - **Task queue** — everything between you and audit-ready, ranked by impact.
+- **Guided remediation** — every control has a "Clear this control" flow: a
+  plain-English step checklist with live progress, assignable **evidence
+  requests** (owner + due date + status), and a "mark satisfied" CTA once the
+  steps are done. Blockers on the dashboard show their step progress.
 - **Audit report** — a clean, printable posture report (readiness + trend, open
   blockers, and the full control→evidence mapping) you can **export to PDF** or
   hand to an auditor via a **read-only share link** (`/share/[token]`, no login).
@@ -72,7 +76,7 @@ just evidence with a non-manual source and an expiry.
 ## Where this goes next
 
 1. ~~**Auditor portal** — a read-only, shareable view of controls + evidence.~~ ✅ Done — see the Audit report.
-2. **Integrations** — pull evidence automatically from AWS, GitHub, Okta, etc.
-3. **Guided remediation** — turn each blocker into a step-by-step fix with an assignable evidence request.
+2. ~~**Guided remediation** — turn each blocker into a step-by-step fix with an assignable evidence request.~~ ✅ Done.
+3. **Integrations** — pull evidence automatically from AWS, GitHub, Okta, etc.
 4. **Multi-framework** — reuse the control engine for ISO 27001, HIPAA.
 5. **Continuous mode** — Type II monitoring windows and drift alerts.

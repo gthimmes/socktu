@@ -17,6 +17,7 @@ export type ControlLike = {
   criterion: { ref: string; title: string; category: { code: string; name: string; inScope: boolean } };
   owner?: { name: string } | null;
   evidence: { id: string; expiresAt: Date | null }[];
+  steps?: { done: boolean }[];
 };
 
 export type Readiness = {
@@ -39,6 +40,8 @@ export type Blocker = {
   status: ControlStatus;
   owner: string | null;
   reason: string;
+  stepsDone: number;
+  stepsTotal: number;
 };
 
 export type ExpiringEvidence = {
@@ -118,6 +121,8 @@ export function computeReadiness(controls: ControlLike[], nowMs = Date.now()): R
           : c.status === "at_risk"
           ? "Required control has weak or stale evidence"
           : "Required control has no evidence yet",
+      stepsDone: c.steps?.filter((s) => s.done).length ?? 0,
+      stepsTotal: c.steps?.length ?? 0,
     }))
     .sort((a, b) => blockerRank(a.status) - blockerRank(b.status));
 

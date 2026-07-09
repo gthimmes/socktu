@@ -7,6 +7,7 @@ const controlInclude = {
   criterion: { include: { category: true } },
   owner: true,
   evidence: true,
+  steps: true,
 } as const;
 
 export async function getReadiness() {
@@ -58,6 +59,8 @@ export async function getControl(id: string) {
       owner: true,
       evidence: { orderBy: { collectedAt: "desc" } },
       tasks: { include: { owner: true } },
+      steps: { orderBy: { order: "asc" } },
+      requests: { include: { owner: true }, orderBy: { createdAt: "asc" } },
     },
   });
 }

@@ -93,7 +93,20 @@ export default async function DashboardPage() {
                       <span className="truncate text-sm font-semibold text-ink">{b.name}</span>
                       <span className="shrink-0 text-[11px] font-medium text-ink-faint">{b.criterionRef}</span>
                     </div>
-                    <div className="mt-0.5 text-xs text-ink-muted">{b.reason}</div>
+                    <div className="mt-0.5 flex items-center gap-2 text-xs text-ink-muted">
+                      <span>{b.reason}</span>
+                      {b.stepsTotal > 0 && (
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-brand-700">
+                          <span className="h-1 w-10 overflow-hidden rounded-full bg-slate-200">
+                            <span
+                              className="block h-full rounded-full bg-brand-500"
+                              style={{ width: `${Math.round((b.stepsDone / b.stepsTotal) * 100)}%` }}
+                            />
+                          </span>
+                          {b.stepsDone}/{b.stepsTotal} steps
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="shrink-0 text-right">
                     <StatusBadge status={b.status} />

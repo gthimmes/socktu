@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getControl } from "@/lib/data";
+import { getControl, getOwners } from "@/lib/data";
 import { StatusSelect } from "@/components/StatusSelect";
+import { RemediationPanel } from "@/components/RemediationPanel";
 import { PriorityBadge, Avatar } from "@/components/Badges";
 import { addEvidence } from "@/app/actions";
 import { formatDate, relativeDays } from "@/lib/format";
@@ -12,7 +13,7 @@ export default async function ControlDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const control = await getControl(id);
+  const [control, owners] = await Promise.all([getControl(id), getOwners()]);
   if (!control) notFound();
 
   return (
@@ -59,6 +60,15 @@ export default async function ControlDetailPage({
           <Meta label="Last updated">{formatDate(control.updatedAt)}</Meta>
         </div>
       </header>
+
+      {/* Guided remediation — the "clear this control" flow */}
+      <RemediationPanel
+        controlId={control.id}
+        status={control.status}
+        steps={control.steps}
+        requests={control.requests}
+        owners={owners}
+      />
 
       {/* How to satisfy */}
       <section className="card p-6">
