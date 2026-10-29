@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
+import { createSqliteAdapter } from "../src/lib/sqlite-adapter";
 
-const db = new PrismaClient();
+const db = new PrismaClient({ adapter: createSqliteAdapter() });
 
 // Deterministic-ish date helpers (relative to seed run time).
 const DAY = 24 * 60 * 60 * 1000;
